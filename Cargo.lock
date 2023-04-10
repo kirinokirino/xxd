@@ -26,8 +26,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "logger"
+version = "0.1.0"
+source = "git+https://github.com/kirinokirino/logger#da36c8a6373205e9cc0651b00b35e2d225af30b3"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "xxd"
 version = "0.1.0"
 dependencies = [
  "confargenv",
+ "log",
+ "logger",
 ]

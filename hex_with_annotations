@@ -1,0 +1,38 @@
+
+; ELF Header
+7F 45 4C 46 ; magic number
+02 ; ELF-64
+01 ; little endian
+01 ; ELF version
+00 ; System V ABI
+00 ; ABI version
+00 00 00 00 00 00 00 ; unused bytes
+02 00 ; executable object file
+3E 00 ; x86-64 (AMD 64)
+01 00 00 00 ; ELF version
+78 00 40 00 00 00 00 00 ; entry point
+40 00 00 00 00 00 00 00 ; program header offset
+00 00 00 00 00 00 00 00 ; section header table offset
+00 00 00 00 ; flags
+40 00 ; ELF header size
+38 00 ; program header entry size
+01 00 ; program header entry count
+40 00 ; section header table entry size
+00 00 ; section header table entry count
+00 00 ; string table index
+
+; Program Header (.text = 0x400000 compared to 0x8048000 on x86)
+01 00 00 00 ; loadable program
+05 00 00 00 ; permissions (read & execute flags)
+78 00 00 00 00 00 00 00 ; program offset (ELF header size + this program header size)
+78 00 40 00 00 00 00 00 ; program virtual address (0x400000 + offset)
+00 00 00 00 00 00 00 00 ; physical address (irrelevant for x86-64)
+10 00 00 00 00 00 00 00 ; file size (just count the bytes for your machine instructions)
+10 00 00 00 00 00 00 00 ; memory size (if this is greater than file size, then it zeros out the extra memory)
+00 10 00 00 00 00 00 00 ; alignment
+
+; Program 
+; Entry = 0x400078
+48 C7 C0 3C 00 00 00 ; mov rax, 60
+48 C7 C7 2A 00 00 00 ; mov rdi, 42
+0F 05 ; syscall (the newer syscall instruction for x86-64 int 0x80 on x86)
