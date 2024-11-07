@@ -19,7 +19,7 @@ fn main() {
 
     let args: Vec<_> = env::args().collect();
     if args.contains(&"-h".to_string()) || args.contains(&"--help".to_string()) || args.len() <= 1 {
-        println!("{}", USAGE);
+        println!("{USAGE}");
         std::process::exit(1);
     }
     let input = config.input.unwrap_or_else(|| args.get(1).unwrap().clone());
@@ -81,9 +81,7 @@ fn format_hex(bytes: &[u8], add_space: bool) -> String {
     let space = if add_space { " " } else { "" };
     let mut result: String = bytes
         .iter()
-        .map(|byte| format!("{byte:0>2x}{space}"))
-        .into_iter()
-        .collect();
+        .fold(String::new(), |s, byte| format!("{s}{byte:0>2x}{space}"));
     if pad_right {
         let hex_width = 16 * 3;
         if result.len() < hex_width {
@@ -99,10 +97,10 @@ fn parse_bytes(bytes: &[u8]) -> Vec<u8> {
         .iter()
         .filter_map(|byte| {
             if *byte == b'\n' {
-                ignore_to_end_of_line = false
+                ignore_to_end_of_line = false;
             }
             if *byte == b';' || *byte == b'/' {
-                ignore_to_end_of_line = true
+                ignore_to_end_of_line = true;
             }
             if !ignore_to_end_of_line && byte.is_ascii_hexdigit() {
                 Some(*byte as char)
@@ -112,10 +110,9 @@ fn parse_bytes(bytes: &[u8]) -> Vec<u8> {
         })
         .array_chunks::<2>()
         .map(|[first, second]| {
-            let hex_chars = format!("{}{}", first, second);
-            let parsed = u8::from_str_radix(&hex_chars, 16)
-                .expect("In reverse mode only [0-9a-fA-F] chars are allowed");
-            parsed
+            let hex_chars = format!("{first}{second}");
+            u8::from_str_radix(&hex_chars, 16)
+                .expect("In reverse mode only [0-9a-fA-F] chars are allowed")
         })
         .collect()
 }
@@ -128,7 +125,7 @@ struct Config {
 }
 
 impl Config {
-    pub fn new() -> Config {
+    pub fn new() -> Self {
         let mut defaults = HashMap::new();
         defaults.insert("mode", "graphical");
         defaults.insert("input", "");
@@ -154,7 +151,7 @@ impl Config {
         } else {
             Some(input.clone())
         };
-        Config {
+        Self {
             mode,
             input,
             log_level,
@@ -162,7 +159,7 @@ impl Config {
     }
 }
 
-const USAGE: &'static str = "Usage: xxd [file] [mode]\n\
+const USAGE: &str = "Usage: xxd [file] [mode]\n\
 xxd ./Cargo.toml mode=graphical";
 
 #[derive(Debug, Clone, Copy)]
