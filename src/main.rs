@@ -8,17 +8,21 @@ use std::io::BufRead;
 use std::io::{self, Write};
 
 use confargenv::fusion;
-use log::LevelFilter;
+use log::*;
 use logger::BareLogger;
 
 fn main() {
     //let _ = BareLogger::new(LevelFilter::max()).init();
     let config = Config::new();
-    let input = config.input.unwrap_or_else(|| {
-        env::args()
-            .nth(1)
-            .expect("Path to the file as first cli argument.")
-    });
+    BareLogger::new(config.log_level).init().unwrap();
+    trace!("{:?}", config);
+
+    let args: Vec<_> = env::args().collect();
+    if args.contains(&"-h".to_string()) || args.contains(&"--help".to_string()) || args.len() <= 1 {
+        println!("{}", USAGE);
+        std::process::exit(1);
+    }
+    let input = config.input.unwrap_or_else(|| args.get(1).unwrap().clone());
     read_path(input, config.mode);
 }
 
@@ -116,9 +120,11 @@ fn parse_bytes(bytes: &[u8]) -> Vec<u8> {
         .collect()
 }
 
+#[derive(Debug)]
 struct Config {
     mode: Mode,
     input: Option<String>,
+    log_level: LevelFilter,
 }
 
 impl Config {
@@ -126,12 +132,21 @@ impl Config {
         let mut defaults = HashMap::new();
         defaults.insert("mode", "graphical");
         defaults.insert("input", "");
+        defaults.insert("log_level", "info");
         let conf = fusion(defaults, None);
         let mode = match conf.get("mode").unwrap().as_str() {
             "graphical" => Mode::Graphical,
             "hex" => Mode::Hex,
             "reverse" => Mode::Reverse,
-            _ => unreachable!(),
+            _ => panic!("Invalid mode, must be graphical | hex | reverse"),
+        };
+        let log_level = match conf.get("log_level").unwrap().as_str() {
+            "info" => LevelFilter::Info,
+            "debug" => LevelFilter::Debug,
+            "trace" => LevelFilter::Trace,
+            "warn" => LevelFilter::Warn,
+            "error" => LevelFilter::Error,
+            _ => panic!("Invalid log level, must be info | debug | trace | warn | error"),
         };
         let input = conf.get("input").unwrap();
         let input = if input.is_empty() {
@@ -139,9 +154,16 @@ impl Config {
         } else {
             Some(input.clone())
         };
-        Config { mode, input }
+        Config {
+            mode,
+            input,
+            log_level,
+        }
     }
 }
+
+const USAGE: &'static str = "Usage: xxd [file] [mode]\n\
+xxd ./Cargo.toml mode=graphical";
 
 #[derive(Debug, Clone, Copy)]
 enum Mode {
